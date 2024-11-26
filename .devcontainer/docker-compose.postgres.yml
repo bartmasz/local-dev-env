@@ -1,0 +1,16 @@
+volumes:
+  postgres-dev-data:
+
+services:
+  postgres-dev:
+    image: postgres:16
+    restart: unless-stopped
+    ports:
+      - 5432:5432
+    volumes:
+      - ./postgres-initdb.d:/docker-entrypoint-initdb.d
+      - postgres-dev-data:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_DB=postgres
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres

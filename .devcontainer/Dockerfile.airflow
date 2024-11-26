@@ -1,0 +1,30 @@
+FROM apache/airflow:2.10.3-python3.11
+COPY requirements.airflow.txt /
+RUN pip install --no-cache-dir -r /requirements.airflow.txt
+
+USER root
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends \
+    openjdk-17-jre-headless \
+    wget
+RUN wget https://archive.apache.org/dist/spark/spark-3.5.1/spark-3.5.1-bin-hadoop3.tgz -O /spark.tgz
+RUN tar -xzvf /spark.tgz -C /
+RUN rm /spark.tgz
+RUN mv /spark-* /opt/spark
+
+# Install jars
+COPY download-spark-jars.sh /download-spark-jars.sh
+RUN /download-spark-jars.sh /opt/spark/jars/
+
+# kubectl
+RUN apt-get install -y apt-transport-https ca-certificates curl gnupg \
+    && curl -fsSL https://pkgs.k8s.io/core:/stable:/v1.30/deb/Release.key | gpg --dearmor -o /etc/apt/keyrings/kubernetes-apt-keyring.gpg \
+    && chmod 644 /etc/apt/keyrings/kubernetes-apt-keyring.gpg \
+    && echo 'deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.gpg] https://pkgs.k8s.io/core:/stable:/v1.30/deb/ /' | tee /etc/apt/sources.list.d/kubernetes.list \
+    && apt-get update \
+    && apt-get install -y kubectl kubectx awscli
+
+USER airflow
+ENV JAVA_HOME=/usr/lib/jvm/java-17-openjdk-arm64
+ENV SPARK_HOME=/opt/spark
+ENV PATH="$PATH:$SPARK_HOME/bin"

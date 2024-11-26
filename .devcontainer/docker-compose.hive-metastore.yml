@@ -1,0 +1,14 @@
+services:
+  hive-metastore:
+    build:
+      context: .
+      dockerfile: Dockerfile.hive-metastore
+    environment:
+      SERVICE_NAME: metastore
+      DB_DRIVER: postgres
+    depends_on:
+      - postgres-dev
+    ports:
+      - "9083:9083"
+    volumes:
+      - ./hive_conf/hive-site.xml:/opt/hive/conf/hive-site.xml

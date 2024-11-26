@@ -1,0 +1,10 @@
+[tool.ruff]
+required-version = "0.8.0"
+line-length = 120
+output-format = "grouped"
+
+[tool.ruff.format]
+preview = true
+
+[tool.ruff.lint.pydocstyle]
+convention = "google"

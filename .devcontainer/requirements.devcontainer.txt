@@ -1,0 +1,16 @@
+-r requirements.airflow.txt
+boto3
+confluent-kafka
+faker
+isort
+jupyterlab
+jupyterlab-code-formatter
+jupyterlab-execute-time
+minio==7.2.12
+pre-commit==4.0.1
+pyspark==3.5.1
+pytest
+pytest-cov
+ruff
+sqlfluff
+sqlfluff-templater-dbt

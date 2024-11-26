@@ -1,0 +1,76 @@
+# Extends ./docker-compose.airflow-base.yml with reduced resources
+# Removes CeleryExecutor and limits some Scheduler/concurrency settings
+---
+x-airflow-common: &airflow-common
+  environment: &airflow-common-env
+    AIRFLOW__WEBSERVER__WORKERS: 1
+    AIRFLOW__CORE__DAGBAG_IMPORT_TIMEOUT: 120
+    AIRFLOW__CORE__DAG_FILE_PROCESSOR_TIMEOUT: 120
+    AIRFLOW__SCHEDULER__DAG_DIR_LIST_INTERVAL: 30
+    AIRFLOW__SCHEDULER__MAX_DAGRUNS_TO_CREATE_PER_LOOP: 1
+    AIRFLOW__SCHEDULER__MAX_DAGRUNS_PER_LOOP_TO_SCHEDULE: 1
+    AIRFLOW__CORE__MAX_ACTIVE_RUNS_PER_DAG: 1
+    AIRFLOW__CORE__MAX_ACTIVE_TASKS_PER_DAG: 2
+    AIRFLOW__CORE__EXECUTOR: LocalExecutor
+    AIRFLOW_CONN_POSTGRES_DEFAULT: postgresql://postgres:postgres@postgres-dev:5432/postgres
+services:
+  postgres:
+    extends:
+      file: docker-compose.airflow-base.yml
+      service: postgres
+
+  airflow-webserver:
+    <<: *airflow-common
+    extends:
+      file: docker-compose.airflow-base.yml
+      service: airflow-webserver
+    # Include redis in each airflow-* service depends_on if using CeleryExecutor
+    # depends_on:
+    #   redis:
+    #     condition: service_healthy
+    cpus: 1
+
+  airflow-scheduler:
+    <<: *airflow-common
+    extends:
+      file: docker-compose.airflow-base.yml
+      service: airflow-scheduler
+    cpus: 1
+
+  airflow-triggerer:
+    <<: *airflow-common
+    extends:
+      file: docker-compose.airflow-base.yml
+      service: airflow-triggerer
+    cpus: 1
+
+  airflow-init:
+    <<: *airflow-common
+    extends:
+      file: docker-compose.airflow-base.yml
+      service: airflow-init
+    cpus: 1
+
+  airflow-cli:
+    <<: *airflow-common
+    extends:
+      file: docker-compose.airflow-base.yml
+      service: airflow-cli
+
+  # Include flower and redis services if using CeleryExecutor
+  flower:
+    <<: *airflow-common
+    extends:
+      file: docker-compose.airflow-base.yml
+      service: flower
+    depends_on:
+      redis:
+        condition: service_healthy
+
+  redis:
+    extends:
+      file: docker-compose.airflow-base.yml
+      service: redis
+
+volumes:
+  postgres-db-volume:

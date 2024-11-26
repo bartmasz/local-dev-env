@@ -1,0 +1,7 @@
+/airflow/
+/code/
+/minio/
+/kafka/
+/cube/
+
+.env.secrets

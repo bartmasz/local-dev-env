@@ -1,0 +1,42 @@
+# Base Debian Bookworm image
+FROM mcr.microsoft.com/devcontainers/python:3.11-bookworm
+
+# Install additional OS packages.
+RUN apt-get update && export DEBIAN_FRONTEND=noninteractive \
+    && apt-get -y install --no-install-recommends \
+    curl \
+    postgresql-client \
+    openjdk-17-jre-headless \
+    wget \
+    iputils-ping \
+    gcc \
+    python3-dev \
+    python3-pip \
+    python3-full \
+    && apt-get autoremove -yqq --purge \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
+RUN wget https://archive.apache.org/dist/spark/spark-3.5.1/spark-3.5.1-bin-hadoop3.tgz -O /spark.tgz
+RUN tar -xzvf /spark.tgz
+RUN rm /spark.tgz
+RUN mv /spark-* /opt/spark
+
+# Install jars
+COPY download-spark-jars.sh /download-spark-jars.sh
+RUN /download-spark-jars.sh /opt/spark/jars/
+
+ENV JAVA_HOME=/usr/lib/jvm/java-17-openjdk-arm64
+ENV SPARK_HOME=/opt/spark
+ENV PATH="$PATH:$SPARK_HOME/bin"
+
+# Python local environment
+RUN python3.11 -m venv /opt/venv
+ENV PATH="/opt/venv/bin:$PATH"
+COPY requirements*.txt /opt/venv
+RUN pip install -r /opt/venv/requirements.devcontainer.txt
+RUN chown vscode:vscode -R /opt/venv
+
+# MinIO Client
+RUN wget https://dl.min.io/client/mc/release/linux-amd64/mc \
+    && chmod +x mc \
+    && mv mc /usr/local/bin/mc

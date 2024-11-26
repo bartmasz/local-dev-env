@@ -1,0 +1,11 @@
+services:
+  trino-coordinator:
+    image: "trinodb/trino:450"
+    hostname: trino
+    ports:
+      - 8082:8082
+    volumes:
+      - ./trino_etc:/etc/trino
+      - ~/.aws/credentials:/home/trino/.aws/credentials:ro
+    environment:
+      AWS_REGION: eu-central-1

@@ -1,0 +1,24 @@
+default_language_version:
+  python: python3
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.5.0
+    hooks:
+      - id: check-ast
+      - id: check-yaml
+      - id: check-case-conflict
+      - id: check-docstring-first
+      - id: check-merge-conflict
+      - id: check-builtin-literals
+      - id: debug-statements
+      - id: end-of-file-fixer
+      - id: fix-encoding-pragma
+        args: [--remove]
+      - id: requirements-txt-fixer
+        args: [./.devcontainer/requirements.devcontainer.txt]
+      - id: trailing-whitespace
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.8.0
+    hooks:
+      - id: ruff-format
+      - id: ruff

@@ -1,0 +1,9 @@
+FROM docker.io/bitnami/spark:3.5.1
+
+USER root
+RUN install_packages wget
+USER 1001
+
+# Install jars
+COPY download-spark-jars.sh /download-spark-jars.sh
+RUN /download-spark-jars.sh /opt/bitnami/spark/jars/

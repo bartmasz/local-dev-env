@@ -1,0 +1,18 @@
+FROM apache/hive:4.0.0
+
+USER root
+# Install additional OS packages.
+RUN apt-get update && export DEBIAN_FRONTEND=noninteractive \
+    && apt-get -y install --no-install-recommends \
+    curl \
+    wget \
+    iputils-ping \
+    && apt-get autoremove -yqq --purge \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install jars
+COPY download-spark-jars.sh /download-spark-jars.sh
+RUN sh /download-spark-jars.sh /opt/hive/lib
+
+USER 1000
