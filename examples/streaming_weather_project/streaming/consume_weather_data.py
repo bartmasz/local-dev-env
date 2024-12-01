@@ -1,19 +1,27 @@
+#!/opt/venv/bin/python
 """
-spark-submit --deploy-mode client --master local[*] examples/kafka_spark_streaming/kafka_spark_consumer.py
-spark-submit --deploy-mode client --master spark://spark:7077 examples/kafka_spark_streaming/kafka_spark_consumer.py
+Run this script to produce weather data to the Kafka topic.
+./consume_weather_data.py
+
+To stop it, press Ctrl+C.
+
+spark-submit --deploy-mode client --master spark://spark:7077 consume_weather_data.py
 """
 
 from pyspark.sql import SparkSession
 
+# Kafka configuration
 BOOTSTRAP_SERVERS = "kafka0:9092"
-TOPIC_NAME = "streaming-sink"
+TOPIC_NAME = "weather-data"
+
+# Iceberg configuration
 CATALOG_NAME = "localiceberg"
-DATABASE_NAME = "devdb"
-TABLE_NAME = "streaming_sink"
+DATABASE_NAME = "weather"
+TABLE_NAME = "weather_raw"
 FULL_TABLE_NAME = f"{CATALOG_NAME}.{DATABASE_NAME}.{TABLE_NAME}"
 
 spark = (
-    SparkSession.builder.appName("KafkaSparkConsumer")
+    SparkSession.builder.appName("WeatherDataConsumer")
     .config(
         "spark.sql.extensions",
         "org.apache.iceberg.spark.extensions.IcebergSparkSessionExtensions",
@@ -28,14 +36,15 @@ spark = (
     .config("spark.hadoop.fs.s3a.secret.key", "iceberg_password")
     .config("spark.hadoop.fs.s3a.impl", "org.apache.hadoop.fs.s3a.S3AFileSystem")
     .config("spark.hadoop.fs.s3a.path.style.access", True)
+    .config("spark.streaming.stopGracefullyOnShutdown", True)
     .getOrCreate()
 )
+spark.sparkContext.setLogLevel("INFO")
 
 spark.sql(f"CREATE DATABASE IF NOT EXISTS {CATALOG_NAME}.{DATABASE_NAME}")
-spark.sql(f"DROP TABLE IF EXISTS {FULL_TABLE_NAME} PURGE")
 
 sql = f"""
-CREATE TABLE {FULL_TABLE_NAME} (
+CREATE TABLE IF NOT EXISTS {FULL_TABLE_NAME} (
     key binary,
     value binary,
     topic string,
@@ -45,17 +54,17 @@ CREATE TABLE {FULL_TABLE_NAME} (
     timestampType int,
     headers array<string>
 )
-USING iceberg;
+USING iceberg
+PARTITIONED BY (hour(timestamp));
 """
 spark.sql(sql)
 
-
-checkpointPath = "/tmp/spark_checkpoints"
+checkpoint_path = "/tmp/spark_checkpoints"
 
 kafka_params = {
     "kafka.bootstrap.servers": BOOTSTRAP_SERVERS,
     "subscribe": TOPIC_NAME,
-    "startingOffsets": "latest",
+    "startingOffsets": "earliest",
     "failOnDataLoss": "false",
 }
 
@@ -64,8 +73,9 @@ query = (
     streaming_df.writeStream.format("iceberg")
     .outputMode("append")
     .trigger(processingTime="1 minute")
-    .option("checkpointLocation", checkpointPath)
+    .option("checkpointLocation", checkpoint_path)
     .toTable(FULL_TABLE_NAME)
 )
+
 query.awaitTermination()
 spark.stop()

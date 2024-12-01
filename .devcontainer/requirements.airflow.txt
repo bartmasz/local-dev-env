@@ -1,9 +1,9 @@
-apache-airflow[apache-hive,apache-iceberg,apache-spark,dbt-cloud,trino]==2.10.3
+apache-airflow-providers-trino==5.8.0
+apache-airflow[apache-hive,apache-iceberg,apache-spark]==2.10.3
 astronomer-cosmos==1.7.1
-# boto3==1.35.69
-# s3fs
-# dbt-core==1.8.4
-# dbt-snowflake==1.8.4
-# dbt-trino==1.8.4
-# snowflake-connector-python==3.12.3
-# snowflake-sqlalchemy==1.7.0
+boto3==1.35.36
+dbt-core~=1.8.0
+dbt-snowflake~=1.8.0
+dbt-trino~=1.8.0
+pyspark==3.5.1
+s3fs==2024.10.0

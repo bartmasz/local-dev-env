@@ -1,0 +1,88 @@
+version: 2
+
+seeds:
+  - name: countries
+    description: Countries dimension table
+    columns:
+      - name: country
+        description: Country name
+        data_tests:
+          - not_null
+          - unique
+      - name: continent
+        description: Continent name
+        data_tests:
+          - not_null
+          - accepted_values:
+              values: ["Europe", "North America"]
+
+models:
+  - name: bronze
+    description: Bronze tier model to explode kafka message into columns
+    columns:
+      - name: timestamp
+        description: Kafka message timestamp
+        data_tests:
+          - not_null
+      - name: measurement_dt
+        description: Measurement date and time
+        data_tests:
+          - not_null
+      - name: country
+        description: Country name
+        data_tests:
+          - not_null
+          - accepted_values:
+              values: ["Poland", "France", "USA"]
+      - name: city
+        description: City name
+        data_tests:
+          - not_null
+      - name: temperature
+        description: Temperature in Celsius
+        data_tests:
+          - not_null
+
+  - name: silver
+    description: Silver tier model to remove duplicates
+    columns:
+      - name: measurement_dt
+        description: Measurement date and time
+        data_tests:
+          - not_null
+      - name: country
+        description: Country name
+        data_tests:
+          - not_null
+      - name: city
+        description: City name
+        data_tests:
+          - not_null
+      - name: temperature
+        description: Temperature in Celsius
+        data_tests:
+          - not_null
+
+  - name: gold
+    description: Gold tier model to aggregate data for consumption
+    columns:
+      - name: measurement_dt_10m
+        description: Measurement date and time rounded to 10 minutes
+        data_tests:
+          - not_null
+      - name: continent
+        description: Continent name
+        data_tests:
+          - not_null
+      - name: country
+        description: Country name
+        data_tests:
+          - not_null
+      - name: city
+        description: City name
+        data_tests:
+          - not_null
+      - name: avg_10m_temperature
+        description: Temperature in Celsius averaged over 10 minutes
+        data_tests:
+          - not_null
