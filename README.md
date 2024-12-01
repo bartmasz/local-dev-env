@@ -31,3 +31,7 @@ Follow this [guide](https://code.visualstudio.com/docs/devcontainers/containers#
 ### Trino
 
 * [Trino UI](http://localhost:8082/ui/)
+
+## Examples
+
+Check `examples` folder for scrips and projects using this tech stack.
